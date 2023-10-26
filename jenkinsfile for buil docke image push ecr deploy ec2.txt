@@ -1,0 +1,74 @@
+pipeline {
+    agent {
+        label 'jenkins_node'
+    }
+    environment {
+        AWS_ACCOUNT_ID = '276755747813'
+        AWS_DEFAULT_REGION = 'ap-southeast-1'
+        AWS_ACCESS_KEY_ID = 'AKIAUA37NSPSRQN4R4HP'
+        AWS_SECRET_ACCESS_KEY = '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'
+        IMAGE_REPO_NAME = 'naveengabu'
+        ECR_REPO = 'project_01'
+        REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+    }
+
+    stages {
+        stage('Logging into AWS ECR') {
+            steps {
+                script {
+                    sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+                }
+            }
+        }
+
+        stage('Cloning Git') {
+            steps {
+                checkout(
+                    scm: [
+                        $class: 'GitSCM',
+                        branches: [[name: '*/feat01']],
+                        userRemoteConfigs: [[url: 'https://github.com/naveengabu/project_1.git']]
+                    ]
+                )
+            }
+        }
+        stage('build') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+
+        stage('Building image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${IMAGE_REPO_NAME}:${BUILD_NUMBER}")
+                }
+            }
+        }
+
+        stage('Pushing to ECR') {
+            steps {
+                script {
+                    sh "aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+                    sh "docker tag $IMAGE_REPO_NAME:$BUILD_NUMBER ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/$ECR_REPO:$BUILD_NUMBER"
+                    sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/$ECR_REPO:$BUILD_NUMBER"
+                }
+            }
+        }
+
+        stage('Deploy to EC2') {
+            steps {
+                sh 'docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION) $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com'
+                sh 'docker pull $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO:$BUILD_NUMBER'
+                sh 'docker run -dit -p 8080:8080 $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO:$BUILD_NUMBER'
+                }
+            }
+        }
+
+    post {
+        always {
+            emailext body: '$DEFAULT_SUBJECT', subject: '$DEFAULT_SUBJECT', to: 'naveengabu143@gmail.com'
+        }
+    }
+    
+}
