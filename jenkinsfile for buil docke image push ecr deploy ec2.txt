@@ -5,7 +5,7 @@ pipeline {
     environment {
         AWS_ACCOUNT_ID = '276755747813'
         AWS_DEFAULT_REGION = 'ap-southeast-1'
-        AWS_ACCESS_KEY_ID = 'AKIAUA37NSPSRQN4R4HP'
+        AWS_ACCESS_KEY_ID = ''
         AWS_SECRET_ACCESS_KEY = ''
         IMAGE_REPO_NAME = 'naveengabu'
         ECR_REPO = 'project_01'
