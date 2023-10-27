@@ -6,7 +6,7 @@ pipeline {
         AWS_ACCOUNT_ID = '276755747813'
         AWS_DEFAULT_REGION = 'ap-southeast-1'
         AWS_ACCESS_KEY_ID = 'AKIAUA37NSPSRQN4R4HP'
-        AWS_SECRET_ACCESS_KEY = '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'
+        AWS_SECRET_ACCESS_KEY = ''
         IMAGE_REPO_NAME = 'naveengabu'
         ECR_REPO = 'project_01'
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
